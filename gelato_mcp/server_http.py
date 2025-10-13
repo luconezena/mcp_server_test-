@@ -75,17 +75,37 @@ async def call_tool(name: str, arguments: dict):
 
     raise ValueError(f"Tool sconosciuto: {name}")
 
+APP_ENV = os.getenv("APP_ENV", "development").lower()
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS")
+DEBUG_ENABLED = os.getenv("ENABLE_DEBUG")
+if DEBUG_ENABLED is None:
+    DEBUG_ENABLED = "0" if APP_ENV == "production" else "1"
+DEBUG_ENABLED = DEBUG_ENABLED == "1"
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Avvio MCP HTTP/SSE...")
+    logger.info("Avvio MCP HTTP/SSE... (env=%s, debug=%s)", APP_ENV, DEBUG_ENABLED)
     yield
     logger.info("Shutdown MCP HTTP/SSE...")
 
-app = FastAPI(title="Gelato MCP Server", version="1.0.0", lifespan=lifespan)
+app = FastAPI(
+    title="Gelato MCP Server",
+    version="1.0.0",
+    lifespan=lifespan,
+    docs_url=None if APP_ENV == "production" else "/docs",
+    redoc_url=None,
+    openapi_url=None if APP_ENV == "production" else "/openapi.json",
+)
+
+origins = None
+if ALLOWED_ORIGINS:
+    origins = [o.strip() for o in ALLOWED_ORIGINS.split(",") if o.strip()]
+else:
+    origins = ["*"]  # default aperto; restringere via env in produzione
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # in prod limita ai tuoi domini
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -153,58 +173,52 @@ async def favicon():
     return HTMLResponse(status_code=204)
 
 # --------------------
-# Endpoint REST di debug (non MCP) per test locale
-# Questi endpoint consentono di provare le logiche senza un client MCP.
-# Nota: in produzione, proteggerli o rimuoverli.
+if DEBUG_ENABLED:
+    # Endpoint REST di debug (non MCP) per test locale
+    # Nota: in produzione vengono disabilitati
+    @app.post("/debug/suggest_targets")
+    async def debug_suggest_targets(payload: dict):
+        stile = payload.get("stile", "soft")
+        t = DEFAULT_SOFT if stile == "soft" else DEFAULT_CLASSICO
+        return JSONResponse(t.model_dump())
 
-# --------------------
-# Endpoint REST di debug (non MCP) per test locale
-# Questi endpoint consentono di provare le logiche senza un client MCP.
-# Nota: in produzione, proteggerli o rimuoverli.
+    @app.post("/debug/balance_recipe")
+    async def debug_balance_recipe(payload: dict):
+        data = BalanceInput(**payload)
+        ric = [Item(**i.model_dump()) for i in data.ingredienti]
+        p = calcola_parametri(ric)
+        entro_map = dentro_range_map(p, data.target)
+        ricetta_new, sugg = ribilancia(ric, p, data.target)
+        note = nota_base50(ricetta_new)
+        special = alerts_speciali(ricetta_new)
+        out = {
+            "totale_kg": round(sum(i.grammi for i in ricetta_new)/1000.0, 3),
+            "parametri": p.model_dump(),
+            "entro_range": entro_map,
+            "suggerimenti": sugg,
+            "alerts": special,
+            "neutro_5_g": round((sum(i.grammi for i in ricetta_new)/1000.0) * 5.0, 3),
+            "ricetta_ribilanciata": [i.model_dump() for i in ricetta_new],
+            "note": note
+        }
+        return JSONResponse(out)
 
-@app.post("/debug/suggest_targets")
-async def debug_suggest_targets(payload: dict):
-    stile = payload.get("stile", "soft")
-    t = DEFAULT_SOFT if stile == "soft" else DEFAULT_CLASSICO
-    return JSONResponse(t.model_dump())
+    @app.post("/debug/export_whatsapp")
+    async def debug_export_whatsapp(payload: dict):
+        data = WhatsappInput(**payload)
+        text = format_whatsapp(data.ricetta, data.parametri, data.target, data.stile, data.lingua)
+        return JSONResponse({"text": text})
 
-@app.post("/debug/balance_recipe")
-async def debug_balance_recipe(payload: dict):
-    data = BalanceInput(**payload)
-    ric = [Item(**i.model_dump()) for i in data.ingredienti]
-    p = calcola_parametri(ric)
-    entro_map = dentro_range_map(p, data.target)
-    ricetta_new, sugg = ribilancia(ric, p, data.target)
-    note = nota_base50(ricetta_new)
-    special = alerts_speciali(ricetta_new)
-    out = {
-        "totale_kg": round(sum(i.grammi for i in ricetta_new)/1000.0, 3),
-        "parametri": p.model_dump(),
-        "entro_range": entro_map,
-        "suggerimenti": sugg,
-        "alerts": special,
-        "neutro_5_g": round((sum(i.grammi for i in ricetta_new)/1000.0) * 5.0, 3),
-        "ricetta_ribilanciata": [i.model_dump() for i in ricetta_new],
-        "note": note
-    }
-    return JSONResponse(out)
+    # Presets helper per UI
+    @app.get("/debug/presets")
+    async def debug_list_presets():
+        return JSONResponse(sorted(list(PRESETS.keys())))
 
-@app.post("/debug/export_whatsapp")
-async def debug_export_whatsapp(payload: dict):
-    data = WhatsappInput(**payload)
-    text = format_whatsapp(data.ricetta, data.parametri, data.target, data.stile, data.lingua)
-    return JSONResponse({"text": text})
-
-# Presets helper per UI
-@app.get("/debug/presets")
-async def debug_list_presets():
-    return JSONResponse(sorted(list(PRESETS.keys())))
-
-@app.get("/debug/preset/{name}")
-async def debug_get_preset(name: str):
-    if name in PRESETS:
-        return JSONResponse([i.model_dump() for i in PRESETS[name]])
-    return JSONResponse({"error": "preset non trovato"}, status_code=404)
+    @app.get("/debug/preset/{name}")
+    async def debug_get_preset(name: str):
+        if name in PRESETS:
+            return JSONResponse([i.model_dump() for i in PRESETS[name]])
+        return JSONResponse({"error": "preset non trovato"}, status_code=404)
 
 if __name__ == "__main__":
     # Avvia direttamente l'istanza app per evitare ambiguità di import (server_http omonimo altrove)

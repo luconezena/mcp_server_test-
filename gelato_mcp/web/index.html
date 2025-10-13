@@ -164,7 +164,7 @@
     </main>
 
     <footer>
-        <small>Solo per uso locale e sviluppo. In produzione proteggi /debug e abilita CORS ristretti.</small>
+        <small id="envNote">Ambiente: <span id="envVal">development</span></small>
     </footer>
 
     <!-- Modal info ingrediente -->
@@ -178,6 +178,19 @@
         </div>
     </div>
 
+    <script>
+        // Mostra l'ambiente a video interrogando / (che include status) o APP_ENV via header opzionale
+        fetch('/')
+            .then(r => r.json())
+            .then(j => {
+                const el = document.getElementById('envVal');
+                if (el && j && j.endpoints) {
+                    // se endpoints ci sono, l'app è attiva; non sappiamo APP_ENV, mostriamo 'production' su Vercel
+                    el.textContent = (location.hostname.endsWith('vercel.app') || location.hostname.endsWith('.it')) ? 'production' : 'development';
+                }
+            })
+            .catch(() => { });
+    </script>
     <script src="/static/app.js"></script>
 </body>
 
