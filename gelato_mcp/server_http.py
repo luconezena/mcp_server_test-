@@ -14,11 +14,11 @@ from mcp.server import Server
 from mcp.types import Tool, TextContent
 from mcp.server.sse import SseServerTransport
 
-from gelato.models import BalanceInput, WhatsappInput, Item
-from gelato.ranges import DEFAULT_SOFT, DEFAULT_CLASSICO
-from gelato.presets import PRESETS
-from gelato.calc_core import calcola_parametri, dentro_range, dentro_range_map, ribilancia, nota_base50, alerts_speciali
-from gelato.whatsapp import format_whatsapp
+from .gelato.models import BalanceInput, WhatsappInput, Item
+from .gelato.ranges import DEFAULT_SOFT, DEFAULT_CLASSICO
+from .gelato.presets import PRESETS
+from .gelato.calc_core import calcola_parametri, dentro_range, dentro_range_map, ribilancia, nota_base50, alerts_speciali
+from .gelato.whatsapp import format_whatsapp
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("gelato_mcp_http")
