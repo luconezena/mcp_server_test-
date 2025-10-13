@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="it">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Il Gelato Artigianale Italiano</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+    <header>
+        <h1 id="title">Il Gelato Artigianale Italiano</h1>
+        <nav>
+            <a href="/" target="_blank">/</a>
+            <a href="/health" target="_blank">/health</a>
+            <a href="/docs" target="_blank">/docs</a>
+            <a href="/sse" target="_blank">/sse</a>
+        </nav>
+        <div class="health">
+            <label for="uiLang" id="lblUiLang">Lingua:</label>
+            <select id="uiLang">
+                <option value="it">Italiano</option>
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="de">Deutsch</option>
+            </select>
+            <button id="btnHealth">Health</button>
+            <span id="healthStatus" class="badge badge-unknown">unknown</span>
+        </div>
+    </header>
+
+    <main>
+        <section class="card">
+            <h2 id="hdr1">1) Stile e Preset</h2>
+            <div class="row">
+                <label><span id="lblStyle">Stile</span>:
+                    <select id="stile">
+                        <option value="soft">soft</option>
+                        <option value="classico">classico</option>
+                    </select>
+                </label>
+                <div class="preset-btns">
+                    <button id="presetFiordipanna">Fiordipanna</button>
+                    <button id="presetCioccolato">Cioccolato</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="targets">
+                    <h3 id="hdrRanges">Range consigliati (%)</h3>
+                    <div class="grid">
+                        <label><span id="lblZuccheri">Zuccheri</span> [min,max]
+                            <input id="t_zuc_min" type="number" step="0.1" disabled />
+                            <input id="t_zuc_max" type="number" step="0.1" disabled />
+                        </label>
+                        <label><span id="lblGrassi">Grassi</span> [min,max]
+                            <input id="t_gr_min" type="number" step="0.1" disabled />
+                            <input id="t_gr_max" type="number" step="0.1" disabled />
+                        </label>
+                        <label><span id="lblSLM">SLM</span> [min,max]
+                            <input id="t_slm_min" type="number" step="0.1" disabled />
+                            <input id="t_slm_max" type="number" step="0.1" disabled />
+                        </label>
+                        <label><span id="lblSolidi">Solidi</span> [min,max]
+                            <input id="t_sol_min" type="number" step="0.1" disabled />
+                            <input id="t_sol_max" type="number" step="0.1" disabled />
+                        </label>
+                        <label><span id="lblPOD">POD</span> [min,max]
+                            <input id="t_pod_min" type="number" step="0.1" disabled />
+                            <input id="t_pod_max" type="number" step="0.1" disabled />
+                        </label>
+                        <label><span id="lblPAC">PAC</span> [min,max]
+                            <input id="t_pac_min" type="number" step="0.1" disabled />
+                            <input id="t_pac_max" type="number" step="0.1" disabled />
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2 id="hdr2">2) Ingredienti</h2>
+            <div id="ingGrid" class="ing-grid">
+                <label>
+                    <span class="ing-name"><span id="lblLatte">Latte (g)</span><button type="button" class="ing-info"
+                            data-info="latte" aria-label="Info">i</button></span>
+                    <input id="ing_latte" type="number" step="1" min="0" />
+                </label>
+                <label>
+                    <span class="ing-name"><span id="lblPanna">Panna 35% (g)</span><button type="button"
+                            class="ing-info" data-info="panna" aria-label="Info">i</button></span>
+                    <input id="ing_panna" type="number" step="1" min="0" />
+                </label>
+                <label>
+                    <span class="ing-name"><span id="lblLSP">Latte Scremato Polvere (g)</span><button type="button"
+                            class="ing-info" data-info="lsp" aria-label="Info">i</button></span>
+                    <input id="ing_lsp" type="number" step="1" min="0" />
+                </label>
+                <label>
+                    <span class="ing-name"><span id="lblSaccarosio">Saccarosio (g)</span><button type="button"
+                            class="ing-info" data-info="saccarosio" aria-label="Info">i</button></span>
+                    <input id="ing_saccarosio" type="number" step="1" min="0" />
+                </label>
+                <label>
+                    <span class="ing-name"><span id="lblDestrosio">Destrosio (g)</span><button type="button"
+                            class="ing-info" data-info="destrosio" aria-label="Info">i</button></span>
+                    <input id="ing_destrosio" type="number" step="1" min="0" />
+                </label>
+                <label>
+                    <span class="ing-name"><span id="lblGlucosio">Glucosio DE21 (g)</span><button type="button"
+                            class="ing-info" data-info="glucosio" aria-label="Info">i</button></span>
+                    <input id="ing_glucosio" type="number" step="1" min="0" />
+                </label>
+                <label>
+                    <span class="ing-name"><span id="lblFruttaSecca">Frutta Secca (g)</span><button type="button"
+                            class="ing-info" data-info="frutta_secca" aria-label="Info">i</button></span>
+                    <input id="ing_frutta_secca" type="number" step="1" min="0" />
+                </label>
+                <label>
+                    <span class="ing-name"><span id="lblFruttaFresca">Frutta Fresca (g)</span><button type="button"
+                            class="ing-info" data-info="frutta_fresca" aria-label="Info">i</button></span>
+                    <input id="ing_frutta_fresca" type="number" step="1" min="0" />
+                </label>
+                <label>
+                    <span class="ing-name"><span id="lblInulina">Inulina (g)</span><button type="button"
+                            class="ing-info" data-info="inulina" aria-label="Info">i</button></span>
+                    <input id="ing_inulina" type="number" step="1" min="0" />
+                </label>
+                <label>
+                    <span class="ing-name"><span id="lblCacaoAmaro">Cacao Amaro (g)</span><button type="button"
+                            class="ing-info" data-info="cacao" aria-label="Info">i</button></span>
+                    <input id="ing_cacao_amaro" type="number" step="1" min="0" />
+                </label>
+            </div>
+            <div class="row">
+                <button id="btnCalcola">Calcola</button>
+                <button id="btnReset" class="secondary">Reset</button>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2 id="hdr3">3) Risultati</h2>
+            <div id="infoGrid" class="info-grid">
+                <div class="info-box">
+                    <div class="name" id="lblNeutro">Neutro 5 (Tara,Guar)</div>
+                    <div class="val"><span id="neutroVal">0</span> g</div>
+                </div>
+            </div>
+            <div id="alerts" class="alerts"></div>
+            <div id="metrics" class="metrics"></div>
+            <pre id="results"></pre>
+            <h3 id="hdrManage">Gestione ricetta</h3>
+            <div class="row">
+                <input id="recipeName" type="text" placeholder="Nome ricetta" />
+                <button id="btnSave">Salva</button>
+                <select id="savedRecipes"></select>
+                <button id="btnLoad">Carica</button>
+                <button id="btnDelete" class="secondary">Elimina</button>
+                <button id="btnShare">Condividi</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <small>Solo per uso locale e sviluppo. In produzione proteggi /debug e abilita CORS ristretti.</small>
+    </footer>
+
+    <!-- Modal info ingrediente -->
+    <div id="infoModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+        <div class="modal-content">
+            <h3 id="infoTitle"></h3>
+            <div id="infoBody"></div>
+            <div class="row" style="justify-content: flex-end; margin-top: 10px;">
+                <button id="infoClose">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

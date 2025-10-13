@@ -1,0 +1,291 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    background: #0b1220;
+    color: #e6ecff;
+}
+
+header,
+footer {
+    padding: 12px 16px;
+    background: #0f172a;
+    border-bottom: 1px solid #1e293b;
+}
+
+header h1 {
+    margin: 0 0 6px 0;
+    font-size: 18px;
+}
+
+nav a {
+    color: #93c5fd;
+    margin-right: 12px;
+    text-decoration: none;
+}
+
+header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.health {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-self: end;
+}
+
+.badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    border: 1px solid #334155;
+}
+
+.badge-ok {
+    background: #0c3b2e;
+    color: #a7f3d0;
+    border-color: #065f46;
+}
+
+.badge-fail {
+    background: #3b0c0c;
+    color: #fecaca;
+    border-color: #7f1d1d;
+}
+
+.badge-unknown {
+    background: #1f2937;
+    color: #cbd5e1;
+}
+
+.alerts {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.alert {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #7f1d1d;
+    background: #3b0c0c;
+    color: #fecaca;
+}
+
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.metric {
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 8px;
+    background: #0b1220;
+}
+
+.metric.bad {
+    border-color: #7f1d1d;
+    background: #3b0c0c;
+}
+
+.metric .name {
+    color: #cbd5e1;
+    font-size: 12px;
+}
+
+.metric .val {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.metric .range {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+main {
+    padding: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.card {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin: 8px 0;
+}
+
+label {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+input,
+select,
+button,
+textarea {
+    background: #0b1220;
+    color: #e6ecff;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0e1729;
+}
+
+.targets .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.targets .grid label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+.targets .grid input {
+    width: 80px;
+    padding: 4px 6px;
+}
+
+.preset-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.ing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 10px;
+}
+
+.ing-grid label {
+    display: grid;
+    grid-template-columns: 1fr 120px;
+    align-items: center;
+}
+
+.ing-grid input {
+    width: 120px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.info-box {
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 8px;
+    background: #0b1220;
+}
+
+.secondary {
+    background: #0e1729;
+    border-color: #475569;
+    color: #cbd5e1;
+}
+
+.ing-grid .ing-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ing-grid .ing-info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    line-height: 1;
+    border: 1px solid #475569;
+    border-radius: 50%;
+    color: #93c5fd;
+    background: #0b1220;
+    cursor: pointer;
+}
+
+/* Modal */
+.modal.hidden {
+    display: none;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.modal .modal-content {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 10px;
+    padding: 14px;
+    max-width: 720px;
+    width: 100%;
+    color: #e6ecff;
+}
+
+.modal h3 {
+    margin-top: 0;
+}
+
+#tblIng {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+#tblIng th,
+#tblIng td {
+    border-bottom: 1px solid #1f2937;
+    padding: 6px;
+}
+
+#results {
+    background: #0b1220;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 10px;
+    overflow: auto;
+}

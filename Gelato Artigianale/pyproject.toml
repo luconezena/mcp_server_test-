@@ -1,0 +1,24 @@
+[tool.briefcase]
+project_name = "Il Gelato Artigianale"
+bundle = "com.gelato.artigianale"
+version = "1.6"
+description = "Applicazione per il bilanciamento delle ricette di gelato artigianale"
+authors = ["Dido"]
+url = "http://ddfra.it"
+license.file = "LICENSE"  # Usa il file LICENSE per la licenza
+
+[tool.briefcase.app.gelato]
+formal_name = "Il Gelato Artigianale"
+description = "Applicazione per il bilanciamento gelato"
+sources = ['gelato']
+resources = ['resources/']
+requires = [
+    'toga-android>=0.3.0',
+]
+
+[tool.briefcase.app.gelato.android]
+backend = "toga-android"
+
+android_permissions = [
+    "android.permission.INTERNET",
+]
