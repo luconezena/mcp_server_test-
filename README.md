@@ -1,3 +1,46 @@
+# Il Gelato Artigianale Italiano (MCP)
+
+Server FastAPI con trasporto SSE compatibile ChatGPT Developer Mode e UI web per bilanciamento ricette gelato.
+
+## Struttura
+- `index.py`: entrypoint per Vercel (esporta `app`)
+- `gelato_mcp/server_http.py`: FastAPI app (SSE `/sse`, UI `/ui`, health `/health`)
+- `gelato_mcp/web/`: asset UI (HTML/CSS/JS)
+- `requirements.txt`: dipendenze Python per deploy
+- `vercel.json`: configurazione routing Vercel
+
+## Esecuzione locale
+```powershell
+# opzionale: crea venv
+python -m venv .venv; .\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# avvio server (porta di default 8000)
+python -m gelato_mcp.server_http --host 127.0.0.1 --port 8000
+# oppure script PowerShell
+./gelato_mcp/start_server.ps1 -ListenHost 127.0.0.1 -Port 8000
+
+# prova
+Start-Process http://127.0.0.1:8000/ui
+Invoke-WebRequest http://127.0.0.1:8000/health | Select-Object -ExpandProperty StatusCode
+```
+
+## Deploy su Vercel
+1. Assicurati che il repo GitHub sia collegato a Vercel
+2. Importa il repository `luconezena/mcp_server_test-`
+3. Build & deploy automatico con `@vercel/python` (usa `index.py`)
+4. Verifica:
+   - `GET /health` → 200
+   - `GET /ui` → UI web
+
+Se necessario, configura variabili d’ambiente su Vercel:
+- `HOST` (default: 0.0.0.0)
+- `PORT` (ignorato su Vercel; gestito dal runtime)
+- `LOG_LEVEL` (info, debug)
+
+## Note
+- L’app espone SSE grezzo su `/sse` e compat layer `/sse/messages`/`/messages`
+- UI localizzata, preset, formule realistiche (POD, PAC, ecc.)
 # MCP Server Test
 
 Server MCP minimale che implementa un tool `ping` che risponde con "pong: <messaggio>".
