@@ -23,6 +23,8 @@ from .gelato.whatsapp import format_whatsapp
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("gelato_mcp_http")
 mcp_server = Server("gelato_mcp_http")
+# Transport SSE condiviso a livello di modulo per mantenere le sessioni tra GET /sse e POST /sse/messages
+sse_transport = SseServerTransport("/messages")
 
 @mcp_server.list_tools()
 async def list_tools():
@@ -123,34 +125,29 @@ async def health():
 async def sse_asgi_app(scope, receive, send):
     if scope["type"] != "http":
         return
-    logger.info(f"Nuova connessione SSE da {scope.get('client')}")
-    transport = SseServerTransport("/messages")
+    # Distinguo GET (stream SSE) e POST (upstream messages)
+    method = scope.get("method", "GET").upper()
     try:
-        async with transport.connect_sse(scope, receive, send) as (read_stream, write_stream):
-            init_options = mcp_server.create_initialization_options()
-            await mcp_server.run(read_stream, write_stream, init_options)
+        if method == "GET":
+            logger.info(f"Nuova connessione SSE da {scope.get('client')}")
+            async with sse_transport.connect_sse(scope, receive, send) as (read_stream, write_stream):
+                init_options = mcp_server.create_initialization_options()
+                await mcp_server.run(read_stream, write_stream, init_options)
+        else:
+            # Gestione POST /messages (montato sotto /sse ⇒ path relativo '/messages')
+            await sse_transport.handle_http(scope, receive, send)
     except Exception as e:
-        logger.error(f"Errore SSE: {e}", exc_info=True)
+        logger.error(f"Errore SSE/HTTP: {e}", exc_info=True)
         try:
-            await send({"type":"http.response.body","body":f"event: error\ndata: {str(e)}\n\n".encode(),"more_body":False})
+            await send({
+                "type": "http.response.body",
+                "body": f"event: error\ndata: {str(e)}\n\n".encode(),
+                "more_body": False
+            })
         except Exception:
             pass
 
 app.mount("/sse", sse_asgi_app)
-
-# Endpoint upstream per i messaggi SSE: ChatGPT invierà a /sse/messages
-@app.post("/sse/messages")
-async def handle_messages(request: Request):
-    data = await request.json()
-    logger.info(f"Messaggio ricevuto: {data}")
-    return JSONResponse({"status": "received"})
-
-# (Opzionale) Compat: mantieni anche /messages se altri client lo usano
-@app.post("/messages")
-async def handle_messages_root(request: Request):
-    data = await request.json()
-    logger.info(f"Messaggio ricevuto (root): {data}")
-    return JSONResponse({"status": "received"})
 
 # --------------------
 # UI Web semplice per test locale
