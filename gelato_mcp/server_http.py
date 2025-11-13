@@ -124,7 +124,8 @@ app.add_middleware(
 
 # --- Streamable HTTP MCP su /mcp (preferito per ChatGPT Developer Mode) ---
 if FASTMCP_AVAILABLE:
-    mcp_http = FastMCP("gelato-mcp")
+    # Imposta lo streamable HTTP sulla root dell'app montata per ottenere /mcp
+    mcp_http = FastMCP("gelato-mcp", streamable_http_path="/")
 
     @mcp_http.tool()
     def suggest_targets(stile: str) -> dict:
