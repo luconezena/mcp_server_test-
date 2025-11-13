@@ -124,8 +124,8 @@ app.add_middleware(
 
 # --- Streamable HTTP MCP su /mcp (preferito per ChatGPT Developer Mode) ---
 if FASTMCP_AVAILABLE:
-    # Espone lo Streamable HTTP su /mcp/rpc così /mcp/ resta libero per info/health
-    mcp_http = FastMCP("gelato-mcp", streamable_http_path="/rpc")
+    # Espone lo Streamable HTTP con path interno '/' e monta su /mcp/rpc
+    mcp_http = FastMCP("gelato-mcp", streamable_http_path="/")
 
     @mcp_http.tool()
     def suggest_targets(stile: str) -> dict:
@@ -165,8 +165,8 @@ if FASTMCP_AVAILABLE:
         return format_whatsapp(ric_items, p, t, stile, lingua)
 
     # Risposta di servizio su GET /mcp/ (evita 500 su accesso via browser)
-    # Monta l'ASGI app Streamable HTTP su /mcp (compatibile con FastAPI)
-    app.mount("/mcp", mcp_http.streamable_http_app())
+    # Monta l'ASGI app Streamable HTTP su /mcp/rpc (compatibile con FastAPI)
+    app.mount("/mcp/rpc", mcp_http.streamable_http_app())
 else:
     logger.info("fastmcp non disponibile: endpoint /mcp disabilitato. Installa 'fastmcp' per abilitarlo.")
 
