@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 import os
@@ -173,11 +173,19 @@ if FASTMCP_AVAILABLE:
             "transport": "streamable-http",
             "hint": "Invia richieste MCP JSON-RPC con POST su questo endpoint"
         })
+    @mcp_http.custom_route("/health", methods=["GET"])
+    async def mcp_health(request):
+        return JSONResponse({"status": "healthy", "component": "mcp"})
 
     # Monta l'ASGI app Streamable HTTP su /mcp (compatibile con FastAPI)
     app.mount("/mcp", mcp_http.streamable_http_app())
 else:
     logger.info("fastmcp non disponibile: endpoint /mcp disabilitato. Installa 'fastmcp' per abilitarlo.")
+
+# Redirect da /mcp a /mcp/ per evitare errori con URL senza trailing slash
+@app.get("/mcp")
+async def mcp_root_redirect():
+    return RedirectResponse(url="/mcp/")
 
 @app.get("/")
 async def root():
