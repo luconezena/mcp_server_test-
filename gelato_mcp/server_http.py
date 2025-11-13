@@ -26,6 +26,7 @@ logger = logging.getLogger("gelato_mcp_http")
 mcp_server = Server("gelato_mcp_http")
 # Transport SSE condiviso a livello di modulo per mantenere le sessioni tra GET /sse e POST /sse/messages
 sse_transport = SseServerTransport("/messages")
+mcp_http = None  # FastMCP instance (se disponibile)
 
 # --- MCP Streamable HTTP (/mcp) tramite fastmcp (consigliato per ChatGPT Developer Mode) ---
 try:
@@ -96,8 +97,16 @@ DEBUG_ENABLED = DEBUG_ENABLED == "1"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Avvio MCP HTTP/SSE... (env=%s, debug=%s)", APP_ENV, DEBUG_ENABLED)
-    yield
-    logger.info("Shutdown MCP HTTP/SSE...")
+    # Se FastMCP è disponibile, avvia il suo session manager per l'app streamable HTTP
+    if FASTMCP_AVAILABLE and mcp_http is not None:
+        try:
+            async with mcp_http.session_manager.run():
+                yield
+        finally:
+            logger.info("Shutdown MCP HTTP/SSE (FastMCP session manager chiuso)...")
+    else:
+        yield
+        logger.info("Shutdown MCP HTTP/SSE...")
 
 app = FastAPI(
     title="Gelato MCP Server",
