@@ -1,10 +1,10 @@
 # Il Gelato Artigianale Italiano (MCP)
 
-Server FastAPI con trasporto SSE compatibile ChatGPT Developer Mode e UI web per bilanciamento ricette gelato.
+Server FastAPI con trasporto Streamable HTTP e SSE compatibili con ChatGPT Developer Mode e UI web per bilanciamento ricette gelato.
 
 ## Struttura
 - `index.py`: entrypoint per Vercel (esporta `app`)
-- `gelato_mcp/server_http.py`: FastAPI app (SSE `/sse`, UI `/ui`, health `/health`)
+- `gelato_mcp/server_http.py`: FastAPI app (Streamable HTTP `/mcp`, SSE `/sse`, UI `/ui`, health `/health`)
 - `gelato_mcp/web/`: asset UI (HTML/CSS/JS)
 - `requirements.txt`: dipendenze Python per deploy
 - `vercel.json`: configurazione routing Vercel
@@ -32,14 +32,34 @@ Invoke-WebRequest http://127.0.0.1:8000/health | Select-Object -ExpandProperty S
 4. Verifica:
    - `GET /health` → 200
    - `GET /ui` → UI web
+   - `GET /mcp/` → JSON informativo (per browser)
+
+### Endpoint esposti
+
+- Streamable HTTP (consigliato per ChatGPT): `/mcp`
+- SSE (alternativo): `/sse` (lo stream annuncia l'endpoint POST `/sse/messages`)
+- UI: `/ui`
+- Health: `/health`
 
 Se necessario, configura variabili d’ambiente su Vercel:
 - `HOST` (default: 0.0.0.0)
 - `PORT` (ignorato su Vercel; gestito dal runtime)
 - `LOG_LEVEL` (info, debug)
 
+## Integrazione con ChatGPT Developer Mode
+
+Opzione A — Streamable HTTP (consigliato):
+- In ChatGPT > Developer Tools > External Tools > Add > HTTP (Streamable)
+- URL: `https://<tuo-progetto>.vercel.app/mcp`
+
+Opzione B — SSE:
+- In ChatGPT > Developer Tools > External Tools > Add > SSE
+- URL: `https://<tuo-progetto>.vercel.app/sse`
+   (il server invierà `event: endpoint` con `/sse/messages?session_id=...` per i POST)
+
+Tool disponibili: `suggest_targets`, `balance_recipe`, `export_whatsapp`.
+
 ## Note
-- L’app espone SSE grezzo su `/sse` e compat layer `/sse/messages`/`/messages`
 - UI localizzata, preset, formule realistiche (POD, PAC, ecc.)
 # MCP Server Test
 
