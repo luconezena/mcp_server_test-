@@ -164,6 +164,16 @@ if FASTMCP_AVAILABLE:
         t = TargetRange(**target)
         return format_whatsapp(ric_items, p, t, stile, lingua)
 
+    # Risposta di servizio su GET /mcp/ (evita 500 su accesso via browser)
+    @mcp_http.custom_route("/", methods=["GET"])
+    async def mcp_info(request):
+        return JSONResponse({
+            "status": "ok",
+            "name": "gelato-mcp",
+            "transport": "streamable-http",
+            "hint": "Invia richieste MCP JSON-RPC con POST su questo endpoint"
+        })
+
     # Monta l'ASGI app Streamable HTTP su /mcp (compatibile con FastAPI)
     app.mount("/mcp", mcp_http.streamable_http_app())
 else:
