@@ -14,7 +14,8 @@ from mcp.server import Server
 from mcp.types import Tool, TextContent
 from mcp.server.sse import SseServerTransport
 
-from .gelato.models import BalanceInput, WhatsappInput, Item
+from .gelato.models import BalanceInput, WhatsappInput, Item, Ingrediente, TargetRange, Parametri, Stile
+from typing import cast
 from .gelato.ranges import DEFAULT_SOFT, DEFAULT_CLASSICO
 from .gelato.presets import PRESETS
 from .gelato.calc_core import calcola_parametri, dentro_range, dentro_range_map, ribilancia, nota_base50, alerts_speciali
@@ -25,6 +26,14 @@ logger = logging.getLogger("gelato_mcp_http")
 mcp_server = Server("gelato_mcp_http")
 # Transport SSE condiviso a livello di modulo per mantenere le sessioni tra GET /sse e POST /sse/messages
 sse_transport = SseServerTransport("/messages")
+
+# --- MCP Streamable HTTP (/mcp) tramite fastmcp (consigliato per ChatGPT Developer Mode) ---
+try:
+    # Usa FastMCP incluso nel pacchetto mcp (nessuna dipendenza extra)
+    from mcp.server.fastmcp.server import FastMCP
+    FASTMCP_AVAILABLE = True
+except Exception:
+    FASTMCP_AVAILABLE = False
 
 @mcp_server.list_tools()
 async def list_tools():
@@ -113,6 +122,52 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Streamable HTTP MCP su /mcp (preferito per ChatGPT Developer Mode) ---
+if FASTMCP_AVAILABLE:
+    mcp_http = FastMCP("gelato-mcp")
+
+    @mcp_http.tool()
+    def suggest_targets(stile: str) -> dict:
+        t = DEFAULT_SOFT if stile == "soft" else DEFAULT_CLASSICO
+        return t.model_dump()
+
+    @mcp_http.tool()
+    def balance_recipe(stile: str, target: dict, ingredienti: list[dict]) -> dict:
+        data = BalanceInput(
+            stile=cast(Stile, stile), 
+            target=TargetRange(**target), 
+            ingredienti=[Ingrediente(**i) for i in ingredienti]
+        )
+        ric = [Item(nome=i.nome, grammi=i.grammi) for i in data.ingredienti]
+        p = calcola_parametri(ric)
+        entro_map = dentro_range_map(p, data.target)
+        ricetta_new, sugg = ribilancia(ric, p, data.target)
+        note = nota_base50(ricetta_new)
+        special = alerts_speciali(ricetta_new)
+        out = {
+            "totale_kg": round(sum(i.grammi for i in ricetta_new)/1000.0, 3),
+            "parametri": p.model_dump(),
+            "entro_range": entro_map,
+            "suggerimenti": sugg,
+            "alerts": special,
+            "neutro_5_g": round((sum(i.grammi for i in ricetta_new)/1000.0) * 5.0, 3),
+            "ricetta_ribilanciata": [i.model_dump() for i in ricetta_new],
+            "note": note
+        }
+        return out
+
+    @mcp_http.tool()
+    def export_whatsapp(ricetta: list[dict], parametri: dict, target: dict, stile: str, lingua: str = "it") -> str:
+        ric_items = [Item(**i) for i in ricetta]
+        p = Parametri(**parametri)
+        t = TargetRange(**target)
+        return format_whatsapp(ric_items, p, t, stile, lingua)
+
+    # Monta l'ASGI app Streamable HTTP su /mcp (compatibile con FastAPI)
+    app.mount("/mcp", mcp_http.streamable_http_app())
+else:
+    logger.info("fastmcp non disponibile: endpoint /mcp disabilitato. Installa 'fastmcp' per abilitarlo.")
+
 @app.get("/")
 async def root():
     return {"name": "Gelato MCP Server", "version": "1.0.0", "status": "running", "endpoints": {"sse": "/sse", "health": "/health"}}
@@ -135,7 +190,7 @@ async def sse_asgi_app(scope, receive, send):
                 await mcp_server.run(read_stream, write_stream, init_options)
         else:
             # Gestione POST /messages (montato sotto /sse ⇒ path relativo '/messages')
-            await sse_transport.handle_http(scope, receive, send)
+            await sse_transport.handle_post_message(scope, receive, send)
     except Exception as e:
         logger.error(f"Errore SSE/HTTP: {e}", exc_info=True)
         try:
