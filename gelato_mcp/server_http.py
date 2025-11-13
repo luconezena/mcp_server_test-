@@ -179,7 +179,38 @@ if FASTMCP_AVAILABLE:
 
     # Risposta di servizio su GET /mcp/ (evita 500 su accesso via browser)
     # Monta l'ASGI app Streamable HTTP su /mcp/rpc (compatibile con FastAPI)
-    app.mount("/mcp/rpc", mcp_http.streamable_http_app())
+    # App originale Streamable HTTP
+    _streamable_app = mcp_http.streamable_http_app()
+
+    # Proxy ASGI che forza Accept e Content-Type se mancanti/non conformi
+    async def _rpc_proxy(scope, receive, send):
+        if scope.get("type") != "http":
+            return await _streamable_app(scope, receive, send)
+
+        method = scope.get("method", "GET").upper()
+        headers = scope.get("headers") or []
+
+        # Normalizza in dict multi-valore
+        hdr = {}
+        for k, v in headers:
+            hdr.setdefault(k.lower(), []).append(v)
+
+        def set_header(name: bytes, value: bytes):
+            nonlocal headers
+            # rimuovi esistenti e aggiungi quello normalizzato
+            headers = [(k, v) for (k, v) in headers if k.lower() != name.lower()]
+            headers.append((name, value))
+
+        # Forza Accept a includere sia JSON che SSE
+        set_header(b"accept", b"application/json, text/event-stream")
+        # Forza Content-Type a JSON per POST
+        if method == "POST":
+            set_header(b"content-type", b"application/json")
+
+        scope["headers"] = headers
+        return await _streamable_app(scope, receive, send)
+
+    app.mount("/mcp/rpc", _rpc_proxy)
 else:
     logger.info("fastmcp non disponibile: endpoint /mcp disabilitato. Installa 'fastmcp' per abilitarlo.")
 
