@@ -138,6 +138,7 @@ if FASTMCP_AVAILABLE:
         "gelato-mcp",
         streamable_http_path="/",
         json_response=True,  # consenti risposte JSON quando il client non accetta SSE
+        stateless_http=True,  # non richiede mcp-session-id su richieste successive
     )
 
     @mcp_http.tool()
