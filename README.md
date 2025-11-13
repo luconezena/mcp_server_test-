@@ -36,7 +36,7 @@ Invoke-WebRequest http://127.0.0.1:8000/health | Select-Object -ExpandProperty S
 
 ### Endpoint esposti
 
-- Streamable HTTP (consigliato per ChatGPT): `/mcp`
+- Streamable HTTP (consigliato per ChatGPT): `/mcp/rpc`
 - SSE (alternativo): `/sse` (lo stream annuncia l'endpoint POST `/sse/messages`)
 - UI: `/ui`
 - Health: `/health`
@@ -50,7 +50,7 @@ Se necessario, configura variabili d’ambiente su Vercel:
 
 Opzione A — Streamable HTTP (consigliato):
 - In ChatGPT > Developer Tools > External Tools > Add > HTTP (Streamable)
-- URL: `https://<tuo-progetto>.vercel.app/mcp`
+- URL: `https://<tuo-progetto>.vercel.app/mcp/rpc`
 
 Opzione B — SSE:
 - In ChatGPT > Developer Tools > External Tools > Add > SSE

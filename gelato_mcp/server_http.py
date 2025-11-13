@@ -124,8 +124,8 @@ app.add_middleware(
 
 # --- Streamable HTTP MCP su /mcp (preferito per ChatGPT Developer Mode) ---
 if FASTMCP_AVAILABLE:
-    # Imposta lo streamable HTTP sulla root dell'app montata per ottenere /mcp
-    mcp_http = FastMCP("gelato-mcp", streamable_http_path="/")
+    # Espone lo Streamable HTTP su /mcp/rpc così /mcp/ resta libero per info/health
+    mcp_http = FastMCP("gelato-mcp", streamable_http_path="/rpc")
 
     @mcp_http.tool()
     def suggest_targets(stile: str) -> dict:
@@ -165,27 +165,29 @@ if FASTMCP_AVAILABLE:
         return format_whatsapp(ric_items, p, t, stile, lingua)
 
     # Risposta di servizio su GET /mcp/ (evita 500 su accesso via browser)
-    @mcp_http.custom_route("/", methods=["GET"])
-    async def mcp_info(request):
-        return JSONResponse({
-            "status": "ok",
-            "name": "gelato-mcp",
-            "transport": "streamable-http",
-            "hint": "Invia richieste MCP JSON-RPC con POST su questo endpoint"
-        })
-    @mcp_http.custom_route("/health", methods=["GET"])
-    async def mcp_health(request):
-        return JSONResponse({"status": "healthy", "component": "mcp"})
-
     # Monta l'ASGI app Streamable HTTP su /mcp (compatibile con FastAPI)
     app.mount("/mcp", mcp_http.streamable_http_app())
 else:
     logger.info("fastmcp non disponibile: endpoint /mcp disabilitato. Installa 'fastmcp' per abilitarlo.")
 
-# Redirect da /mcp a /mcp/ per evitare errori con URL senza trailing slash
+# Info, health e redirect a livello FastAPI (fuori dall'app montata)
 @app.get("/mcp")
 async def mcp_root_redirect():
     return RedirectResponse(url="/mcp/")
+
+@app.get("/mcp/")
+async def mcp_info_root():
+    return JSONResponse({
+        "status": "ok",
+        "name": "gelato-mcp",
+        "transport": "streamable-http",
+        "endpoint": "/mcp/rpc",
+        "hint": "Per ChatGPT Developer Mode usa lo Streamable HTTP su /mcp/rpc"
+    })
+
+@app.get("/mcp/health")
+async def mcp_health_root():
+    return JSONResponse({"status": "healthy", "component": "mcp"})
 
 @app.get("/")
 async def root():
